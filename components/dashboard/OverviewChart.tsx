@@ -65,7 +65,7 @@ export function OverviewChart() {
                                 fontWeight: '900'
                             }}
                             itemStyle={{ color: '#ea580c' }}
-                            formatter={(value: any) => [`${value} DH`, 'Revenu']}
+                            formatter={(value: number | undefined) => [`${value ?? 0} DH`, 'Revenu']}
                         />
                         <Bar
                             dataKey="total"

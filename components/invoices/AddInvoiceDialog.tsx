@@ -78,8 +78,8 @@ export function AddInvoiceDialog() {
         const q = Number(item.quantity) || 0;
         return acc + (p * q);
     }, 0);
-    const tax = subtotal * (form.watch("taxRate") / 100);
-    const total = subtotal + tax - form.watch("discount");
+    const tax = subtotal * ((form.watch("taxRate") as number || 0) / 100);
+    const total = subtotal + tax - (form.watch("discount") as number || 0);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -211,7 +211,7 @@ export function AddInvoiceDialog() {
                                     <span>{subtotal.toFixed(2)} DH</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    <span>TVA {form.watch("taxRate")}%</span>
+                                    <span>TVA {form.watch("taxRate") as any}%</span>
                                     <span>{tax.toFixed(2)} DH</span>
                                 </div>
                                 <div className="h-[1px] bg-slate-800 w-full" />

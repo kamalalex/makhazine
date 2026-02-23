@@ -46,7 +46,7 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
     const [selectedWarehouse, setSelectedWarehouse] = useState<string>("default");
     const router = useRouter();
 
-    const form = useForm<z.infer<typeof productSchema>>({
+    const form = useForm<any>({
         resolver: zodResolver(productSchema),
         defaultValues: {
             reference: product?.reference || "",

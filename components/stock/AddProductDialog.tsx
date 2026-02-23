@@ -44,7 +44,7 @@ export function AddProductDialog({ warehouses }: AddProductDialogProps) {
     const [selectedWarehouse, setSelectedWarehouse] = useState<string>("default");
     const router = useRouter();
 
-    const form = useForm<z.infer<typeof productSchema>>({
+    const form = useForm<any>({
         resolver: zodResolver(productSchema),
         defaultValues: {
             reference: "",

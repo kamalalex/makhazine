@@ -106,8 +106,9 @@ export default function Home() {
               </Button>
             </div>
             <div className="flex items-center gap-6 pt-4 text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-none">
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Sans Carte Bancaire</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Conformité Marocaine</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Paiement Sécurisé</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Facile à utiliser</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> 100% Automatisé</div>
             </div>
           </div>
 
@@ -117,7 +118,7 @@ export default function Home() {
             <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-200/20 rounded-full blur-[100px] animate-pulse hidden sm:block"></div>
 
             {/* Glassmorphism Mockup */}
-            <div className="bg-white/40 backdrop-blur-xl p-4 rounded-[32px] shadow-[0_32px_80px_-16px_rgba(30,41,59,0.15)] border border-white/60 relative z-20 overflow-hidden transform hover:-rotate-1 transition-transform duration-700">
+            <div className="bg-white/40 backdrop-blur-xl p-4 rounded-[32px] shadow-[0_32px_80px_-16px_rgba(30,41,59,0.15)] border border-white/60 relative z-20 overflow-hidden transform hover:-rotate-1 transition-transform duration-700 hidden lg:block">
               <div className="w-full h-[450px] bg-slate-900 rounded-[24px] p-6 overflow-hidden">
                 <div className="flex gap-4 mb-8">
                   <div className="w-12 h-12 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center"><LayoutDashboard className="h-6 w-6 text-orange-500" /></div>
@@ -165,7 +166,7 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 bg-white relative overflow-hidden">
+        <section id="features" className="py-5 bg-white relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 lg:px-12 text-center">
             <h2 className="text-sm font-black text-orange-600 uppercase tracking-[0.3em] mb-4">Fonctionnalités B2B</h2>
             <h3 className="text-4xl font-bold text-slate-900 mb-16">Un écosystème complet pour votre logistique</h3>

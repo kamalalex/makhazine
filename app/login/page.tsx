@@ -89,7 +89,7 @@ export default function LoginPage() {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between ml-1">
                                     <Label htmlFor="password" className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Mot de passe</Label>
-                                    <Link href="#" className="text-[10px] font-black text-orange-600 hover:underline uppercase tracking-widest">Oublié ?</Link>
+
                                 </div>
                                 <Input
                                     id="password"
@@ -99,6 +99,7 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
+                                <Link href="#" className="text-[10px] font-black text-orange-600 hover:underline uppercase tracking-widest">Oublié ?</Link>
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-col space-y-6 p-10 pt-0">

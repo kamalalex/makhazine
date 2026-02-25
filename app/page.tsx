@@ -48,31 +48,30 @@ export default function Home() {
 
         {/* Mobile Navigation Overlay */}
         {isMenuOpen && (
-          <div className="fixed inset-0 top-20 z-[1000] md:hidden bg-white opacity-100 border-t border-slate-100 animate-in slide-in-from-top duration-300 shadow-2xl">
+          <div className="fixed inset-0 top-20 z-[1000] md:hidden bg-white border-t border-slate-100 flex flex-col pt-4 overflow-y-auto">
             <nav className="flex flex-col p-6 gap-6 text-lg font-bold text-slate-900">
-              <Link
+              <a
                 href="#features"
-                className="hover:text-orange-600 transition-colors"
+                className="hover:text-orange-600 transition-colors py-2 border-b border-slate-50"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Fonctionnalités
-              </Link>
-              <Link
+              </a>
+              <a
                 href="#pricing"
-                className="hover:text-orange-600 transition-colors"
+                className="hover:text-orange-600 transition-colors py-2 border-b border-slate-50"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Tarifs
-              </Link>
-              <div className="h-[1px] bg-slate-100 my-2" />
+              </a>
               <Link
                 href="/login"
-                className="hover:text-orange-600 transition-colors"
+                className="hover:text-orange-600 transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Connexion
               </Link>
-              <Button asChild className="bg-orange-600 hover:bg-orange-700 rounded-xl py-6 shadow-lg shadow-orange-200 border-none text-white text-lg">
+              <Button asChild className="bg-orange-600 hover:bg-orange-700 rounded-xl py-7 shadow-lg shadow-orange-200 border-none text-white text-lg mt-4">
                 <Link href="/register" onClick={() => setIsMenuOpen(false)}>
                   Essai Gratuit
                 </Link>

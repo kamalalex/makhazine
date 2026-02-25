@@ -51,6 +51,10 @@ export default function LoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-slate-50/50 p-6">
             <div className="w-full max-w-lg space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex flex-col items-center">
+                    <Link href="/" className="self-start mb-6 text-slate-400 hover:text-orange-600 flex items-center gap-2 font-bold transition-colors group">
+                        <span className="transition-transform group-hover:-translate-x-1">←</span>
+                        <span>Retour à l'accueil</span>
+                    </Link>
                     <MakhazineLogo className="h-20 w-20 mb-4" textClassName="text-5xl font-black" />
                     <p className="mt-2 text-sm text-slate-500 font-bold uppercase tracking-[0.2em] leading-none">Accès Gestionnaire</p>
                 </div>

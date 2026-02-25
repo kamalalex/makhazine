@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User, LifeBuoy, Building2 } from "lucide-react";
+import { Bell, Search, User, LifeBuoy, Building2, Menu } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,19 +13,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, signOut } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Button } from "./ui/button";
 
-export function DashboardTopbar() {
+interface DashboardTopbarProps {
+    onMenuClick?: () => void;
+}
+
+export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
     const { data: session } = useSession();
 
     return (
-        <header className="h-20 border-b bg-white flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm backdrop-blur-md bg-white/80">
-            <div className="flex items-center bg-slate-100 rounded-xl px-4 py-2 w-96 border border-slate-200 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500/50 transition-all">
-                <Search className="h-4 w-4 text-slate-400 mr-2" />
-                <input
-                    type="text"
-                    placeholder="Chercher une référence, un client..."
-                    className="bg-transparent border-none focus:outline-none text-sm w-full font-medium"
-                />
+        <header className="h-20 border-b bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shadow-sm backdrop-blur-md bg-white/80">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
+                    <Menu className="h-6 w-6" />
+                </Button>
+                <div className="hidden sm:flex items-center bg-slate-100 rounded-xl px-4 py-2 w-64 lg:w-96 border border-slate-200 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500/50 transition-all">
+                    <Search className="h-4 w-4 text-slate-400 mr-2" />
+                    <input
+                        type="text"
+                        placeholder="Chercher..."
+                        className="bg-transparent border-none focus:outline-none text-sm w-full font-medium"
+                    />
+                </div>
             </div>
 
             <div className="flex items-center gap-6">

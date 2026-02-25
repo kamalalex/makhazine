@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
     LayoutDashboard,
     Package,
@@ -11,6 +12,7 @@ import {
     Settings,
     LogOut,
     ShieldCheck,
+    X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,12 @@ const navigation = [
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+    className?: string;
+    onClose?: () => void;
+}
+
+export function DashboardSidebar({ className, onClose }: DashboardSidebarProps) {
     const pathname = usePathname();
     const { data: session } = useSession();
     const isAdmin = session?.user?.role === "ADMIN";
@@ -37,9 +44,14 @@ export function DashboardSidebar() {
     }
 
     return (
-        <div className="flex h-full w-64 flex-col bg-slate-900 text-white shadow-2xl">
-            <div className="flex h-20 items-center px-6 border-b border-slate-800 bg-slate-900">
+        <div className={cn("flex h-full w-64 flex-col bg-slate-900 text-white shadow-2xl transition-all duration-300", className)}>
+            <div className="flex h-20 items-center justify-between px-6 border-b border-slate-800 bg-slate-900">
                 <MakhazineLogo className="h-8 w-8" textClassName="text-xl text-white font-black" />
+                {onClose && (
+                    <Button variant="ghost" size="icon" className="md:hidden text-slate-400" onClick={onClose}>
+                        <X className="h-6 w-6" />
+                    </Button>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto py-6">
@@ -52,6 +64,7 @@ export function DashboardSidebar() {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                onClick={onClose}
                                 className={cn(
                                     "group flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-300",
                                     isActive

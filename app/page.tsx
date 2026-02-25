@@ -23,9 +23,9 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
+    <div className="flex flex-col min-h-screen bg-slate-50/50 overflow-x-hidden">
       {/* Header */}
-      <header className="px-6 lg:px-12 h-20 flex items-center justify-between border-b bg-white/70 backdrop-blur-xl sticky top-0 z-50">
+      <header className="px-6 lg:px-12 h-20 flex items-center justify-between border-b bg-white sticky top-0 z-[1001]">
         <MakhazineLogo className="h-10 w-10" textClassName="text-2xl font-black" />
 
         {/* Desktop Navigation */}
@@ -48,7 +48,7 @@ export default function Home() {
 
         {/* Mobile Navigation Overlay */}
         {isMenuOpen && (
-          <div className="fixed inset-0 top-20 z-40 md:hidden bg-white animate-in slide-in-from-top duration-300">
+          <div className="fixed inset-0 top-20 z-[1000] md:hidden bg-white opacity-100 border-t border-slate-100 animate-in slide-in-from-top duration-300 shadow-2xl">
             <nav className="flex flex-col p-6 gap-6 text-lg font-bold text-slate-900">
               <Link
                 href="#features"
@@ -114,8 +114,8 @@ export default function Home() {
 
           <div className="relative">
             {/* Abstract Background Shapes */}
-            <div className="absolute -top-20 -right-20 w-96 h-96 bg-orange-200/20 rounded-full blur-[100px] animate-pulse"></div>
-            <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-200/20 rounded-full blur-[100px] animate-pulse"></div>
+            <div className="absolute -top-20 -right-20 w-96 h-96 bg-orange-200/20 rounded-full blur-[100px] animate-pulse hidden sm:block"></div>
+            <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-200/20 rounded-full blur-[100px] animate-pulse hidden sm:block"></div>
 
             {/* Glassmorphism Mockup */}
             <div className="bg-white/40 backdrop-blur-xl p-4 rounded-[32px] shadow-[0_32px_80px_-16px_rgba(30,41,59,0.15)] border border-white/60 relative z-20 overflow-hidden transform hover:-rotate-1 transition-transform duration-700">
@@ -144,7 +144,7 @@ export default function Home() {
             </div>
 
             {/* Floating Badges */}
-            <div className="absolute -right-6 top-1/4 bg-white p-5 rounded-2xl shadow-2xl border border-slate-100 z-30 animate-bounce duration-[5000ms]">
+            <div className="absolute -right-6 top-1/4 bg-white p-5 rounded-2xl shadow-2xl border border-slate-100 z-30 animate-bounce duration-[5000ms] hidden lg:block">
               <div className="flex items-center gap-3">
                 <div className="bg-emerald-100 p-2 rounded-lg"><BarChart3 className="h-5 w-5 text-emerald-600" /></div>
                 <div>
@@ -153,7 +153,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="absolute -left-10 bottom-1/4 bg-white p-5 rounded-2xl shadow-2xl border border-slate-100 z-30 animate-bounce duration-[7000ms]">
+            <div className="absolute -left-10 bottom-1/4 bg-white p-5 rounded-2xl shadow-2xl border border-slate-100 z-30 animate-bounce duration-[7000ms] hidden lg:block">
               <div className="flex items-center gap-3">
                 <div className="bg-orange-100 p-2 rounded-lg"><Package className="h-5 w-5 text-orange-600" /></div>
                 <div>

@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50 overflow-x-hidden">
       {/* Header */}
-      <header className="px-6 lg:px-12 h-20 flex items-center justify-between border-b bg-white sticky top-0 z-[1001]">
+      <header className="px-6 lg:px-12 h-20 flex items-center justify-between border-b bg-white fixed top-0 left-0 right-0 z-[1001]">
         <MakhazineLogo className="h-10 w-10" textClassName="text-2xl font-black" />
 
         {/* Desktop Navigation */}
@@ -81,7 +81,7 @@ export default function Home() {
         )}
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-20">
         {/* Hero Section */}
         <section className="px-6 lg:px-12 pt-20 pb-32 text-center lg:text-left grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8 max-w-2xl relative z-10">

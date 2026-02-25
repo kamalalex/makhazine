@@ -1,4 +1,6 @@
-// Deployment trigger
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,17 +13,22 @@ import {
   FileText,
   CreditCard,
   LayoutDashboard,
-  ArrowRight
+  ArrowRight,
+  Menu,
+  X
 } from "lucide-react";
 import { MakhazineLogo } from "@/components/MakhazineLogo";
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
       {/* Header */}
       <header className="px-6 lg:px-12 h-20 flex items-center justify-between border-b bg-white/70 backdrop-blur-xl sticky top-0 z-50">
         <MakhazineLogo className="h-10 w-10" textClassName="text-2xl font-black" />
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex gap-8 items-center text-sm font-semibold text-slate-600">
           <Link href="#features" className="hover:text-orange-600 transition-colors">Fonctionnalités</Link>
           <Link href="#pricing" className="hover:text-orange-600 transition-colors">Tarifs</Link>
@@ -30,6 +37,49 @@ export default function Home() {
             <Link href="/register">Essai Gratuit</Link>
           </Button>
         </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden p-2 text-slate-600 hover:text-orange-600 transition-colors"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+        </button>
+
+        {/* Mobile Navigation Overlay */}
+        {isMenuOpen && (
+          <div className="fixed inset-0 top-20 z-40 md:hidden bg-white animate-in slide-in-from-top duration-300">
+            <nav className="flex flex-col p-6 gap-6 text-lg font-bold text-slate-900">
+              <Link
+                href="#features"
+                className="hover:text-orange-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Fonctionnalités
+              </Link>
+              <Link
+                href="#pricing"
+                className="hover:text-orange-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Tarifs
+              </Link>
+              <div className="h-[1px] bg-slate-100 my-2" />
+              <Link
+                href="/login"
+                className="hover:text-orange-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Connexion
+              </Link>
+              <Button asChild className="bg-orange-600 hover:bg-orange-700 rounded-xl py-6 shadow-lg shadow-orange-200 border-none text-white text-lg">
+                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                  Essai Gratuit
+                </Link>
+              </Button>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">

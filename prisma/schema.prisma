@@ -102,6 +102,8 @@ model Product {
   brand           String?
   description     String?
   price           Float
+  costPrice       Float?   // Prix de revient (coût d'achat réel)
+  taxRate         Float    @default(20.0)
   stock           Int      @default(0)
   lowStockAlert   Int      @default(5)
   category        String?
@@ -129,20 +131,65 @@ model StockMovement {
   createdAt   DateTime @default(now())
 }
 
+enum ClientType {
+  B2B
+  B2C
+}
+
+enum PaymentMethod {
+  CHEQUE
+  LCN
+  VIREMENT
+  CASH
+}
+
 model Client {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  email         String?
-  phone         String?
-  address       String?
-  isProspect    Boolean  @default(true)
-  userId        String   @db.ObjectId
-  user          User     @relation(fields: [userId], references: [id])
-  interactions  Interaction[]
-  invoices      Invoice[]
-  quotes        Quote[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  type              ClientType     @default(B2C)
+  name              String         // Raison sociale ou Nom complet
+  
+  // Tax IDs (Moroccan context)
+  ice               String?        // Identifiant Commun de l'Entreprise
+  if                String?        // Identifiant Fiscal
+  rc                String?        // Registre du Commerce
+  
+  // Main Contact
+  contactName       String?
+  contactPosition   String?
+  email             String?        // Primary email
+  phone             String?        // Primary phone (Mandatory according to user rules)
+  
+  // Logistics
+  billingAddress    String?
+  shippingAddress   String?
+  
+  // Commercial
+  paymentTerms      Int?           @default(0) // Delay in days (0 = at order)
+  paymentMethod     PaymentMethod? @default(CASH)
+  defaultDiscount   Float?         @default(0.0)
+  category          String?        // e.g. Grossiste, Détaillant, VIP
+  tags              String[]       @default([])
+  
+  // Risk Management
+  creditLimit       Float?         @default(0.0)
+  
+  // Status
+  isProspect        Boolean        @default(true)
+  isArchived        Boolean        @default(false)
+  autoRemindersEnabled Boolean     @default(true)
+  
+  userId            String         @db.ObjectId
+  user              User           @relation(fields: [userId], references: [id])
+  
+  interactions      Interaction[]
+  invoices          Invoice[]
+  quotes            Quote[]
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([email, userId])
+  @@unique([ice, userId])
 }
 
 model Interaction {
@@ -165,18 +212,48 @@ model Invoice {
   discount         Float    @default(0.0)
   total            Float
   notes            String?
+  quoteNumber      String?  // Reference to origin quote
+  poNumber         String?  // Reference to Purchase Order (Bon de commande)
+  attachments      String[] // For uploaded documents like cheque copies
   clientId         String   @db.ObjectId
   client           Client   @relation(fields: [clientId], references: [id])
   userId           String   @db.ObjectId
   user             User     @relation(fields: [userId], references: [id])
   items            InvoiceItem[]
   payments         Payment[]
+  deliveryNotes    DeliveryNote[]
   stripeCustomerId String?
   paymentStatus    String?
+  lastReminderAt   DateTime?
+  reminderHistory  String[] @default([])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@unique([number, userId])
+}
+
+model DeliveryNote {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  number      String
+  date        DateTime @default(now())
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  clientId    String   @db.ObjectId
+  userId      String   @db.ObjectId
+  items       DeliveryNoteItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([number, userId])
+}
+
+model DeliveryNoteItem {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  reference      String?
+  description    String
+  quantity       Int
+  deliveryNoteId String   @db.ObjectId
+  deliveryNote   DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
 }
 
 model Quote {
@@ -185,7 +262,10 @@ model Quote {
   date        DateTime @default(now())
   validUntil  DateTime
   status      String   @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED, CONVERTED
+  taxRate     Float    @default(20.0)
+  discount    Float    @default(0.0)
   total       Float
+  notes       String?
   clientId    String   @db.ObjectId
   client      Client   @relation(fields: [clientId], references: [id])
   userId      String   @db.ObjectId
@@ -201,27 +281,36 @@ model Quote {
 
 model InvoiceItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  reference   String?
   description String
   quantity    Int
   price       Float
+  taxRate     Float    @default(20.0)
   invoiceId   String   @db.ObjectId
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
 model QuoteItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  reference   String?
   description String
   quantity    Int
   price       Float
+  taxRate     Float    @default(20.0)
   quoteId     String   @db.ObjectId
   quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  amount    Float
-  date      DateTime @default(now())
-  method    String?
-  invoiceId String   @db.ObjectId
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount      Float
+  date        DateTime @default(now())
+  method      String?  // CASH, CHEQUE, TRANSFER, LCN
+  reference   String?  // Numéro de chèque, LCN, ou virement
+  dueDate     DateTime? // Date d'encaissement pour Chèque/LCN
+  notes       String?
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

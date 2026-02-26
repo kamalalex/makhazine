@@ -28,3 +28,35 @@ export async function sendAdminNotification(userData: any) {
     `,
     });
 }
+
+export async function sendDocumentEmail(to: string, subject: string, message: string, filename: string, base64Data: string) {
+    if (!process.env.RESEND_API_KEY) {
+        throw new Error("Clé API d'envoi d'email non configurée");
+    }
+
+    // Convert data URI (data:application/pdf;base64,xxxx) to pure base64 string
+    const base64Content = base64Data.split('base64,')[1] || base64Data;
+
+    await resend.emails.send({
+        from: "onboarding@resend.dev", // Note: Replace in prod or it limits to verified emails
+        to: to,
+        subject: subject,
+        html: `<div style="font-family: sans-serif; white-space: pre-wrap;">${message}</div>`,
+        attachments: [
+            {
+                filename: filename,
+                content: base64Content,
+            }
+        ]
+    });
+}
+
+export async function sendReminderEmail(to: string, subject: string, html: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    await resend.emails.send({
+        from: "makhazine@resend.dev",
+        to: to,
+        subject: subject,
+        html: html,
+    });
+}

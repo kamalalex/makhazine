@@ -52,9 +52,11 @@ export function AddProductDialog({ warehouses }: AddProductDialogProps) {
             brand: "",
             description: "",
             price: 0,
+            costPrice: undefined,
             stock: 0,
             lowStockAlert: 5,
             category: "",
+            taxRate: 20,
         },
     });
 
@@ -137,6 +139,29 @@ export function AddProductDialog({ warehouses }: AddProductDialogProps) {
                             )}
                         />
 
+                        {/* Description — visible admin uniquement, non affichée sur devis/factures */}
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1 flex items-center gap-2">
+                                        Description Interne
+                                        <span className="bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Admin / Export</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <textarea
+                                            {...field}
+                                            placeholder="Informations internes (fournisseur, garantie, notes...)&#10;Non visible sur les devis et factures clients."
+                                            rows={3}
+                                            className="w-full rounded-xl border border-slate-200 bg-amber-50/40 focus:bg-amber-50 font-medium text-sm px-4 py-3 text-slate-700 outline-none transition-all resize-none placeholder:text-slate-300 focus:ring-2 focus:ring-amber-200"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <div className="grid grid-cols-2 gap-6">
                             <FormField
                                 control={form.control}
@@ -172,13 +197,14 @@ export function AddProductDialog({ warehouses }: AddProductDialogProps) {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6 pt-2">
+                        {/* Prix HT + Prix de revient */}
+                        <div className="grid grid-cols-2 gap-6 pt-2">
                             <FormField
                                 control={form.control}
                                 name="price"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Prix Achat (DH)</FormLabel>
+                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Prix de Vente HT (DH)</FormLabel>
                                         <FormControl>
                                             <Input type="number" {...field} value={field.value ?? ""} className="h-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white font-black text-right transition-all" />
                                         </FormControl>
@@ -186,6 +212,54 @@ export function AddProductDialog({ warehouses }: AddProductDialogProps) {
                                     </FormItem>
                                 )}
                             />
+                            <FormField
+                                control={form.control}
+                                name="costPrice"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1 flex items-center gap-2">
+                                            Prix de Revient (DH)
+                                            <span className="bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Admin</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="Coût d'achat réel"
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                className="h-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white font-black text-right transition-all placeholder:text-slate-300"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name="taxRate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Taux TVA (%)</FormLabel>
+                                    <Select onValueChange={(val) => field.onChange(parseFloat(val))} defaultValue={field.value.toString()}>
+                                        <FormControl>
+                                            <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white font-black transition-all">
+                                                <SelectValue placeholder="Choisir TVA" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                            <SelectItem value="20" className="font-bold">20% (Standard)</SelectItem>
+                                            <SelectItem value="10" className="font-bold">10% (Réduit)</SelectItem>
+                                            <SelectItem value="7" className="font-bold">7% (Services)</SelectItem>
+                                            <SelectItem value="0" className="font-bold">0% (Exonéré)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="grid grid-cols-2 gap-6 pt-2">
                             <FormField
                                 control={form.control}
                                 name="stock"

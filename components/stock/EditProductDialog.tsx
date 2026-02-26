@@ -57,6 +57,8 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
             stock: Number(product?.stock) || 0,
             lowStockAlert: Number(product?.lowStockAlert) || 5,
             category: product?.category || "",
+            taxRate: Number(product?.taxRate) || 20,
+            costPrice: product?.costPrice ? Number(product.costPrice) : undefined,
         },
     });
 
@@ -71,6 +73,8 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
                 stock: Number(product.stock),
                 lowStockAlert: Number(product.lowStockAlert),
                 category: product.category || "",
+                taxRate: Number(product.taxRate) || 20,
+                costPrice: product.costPrice ? Number(product.costPrice) : undefined,
             });
 
             if (product.warehouseStocks && product.warehouseStocks.length > 0) {
@@ -152,6 +156,29 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
                             )}
                         />
 
+                        {/* Description interne — admin/export uniquement */}
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1 flex items-center gap-2">
+                                        Description Interne
+                                        <span className="bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Admin / Export</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <textarea
+                                            {...field}
+                                            placeholder="Informations internes (fournisseur, garantie, notes...)&#10;Non visible sur les devis et factures clients."
+                                            rows={3}
+                                            className="w-full rounded-xl border border-slate-200 bg-amber-50/40 focus:bg-amber-50 font-medium text-sm px-4 py-3 text-slate-700 outline-none transition-all resize-none placeholder:text-slate-300 focus:ring-2 focus:ring-amber-200"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <div className="grid grid-cols-2 gap-8">
                             <FormField
                                 control={form.control}
@@ -187,13 +214,13 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-50 pt-8">
+                        <div className="grid grid-cols-2 gap-8 pt-4 border-t border-slate-50 pt-8">
                             <FormField
                                 control={form.control}
                                 name="price"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Prix (DH)</FormLabel>
+                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Prix de Vente HT (DH)</FormLabel>
                                         <FormControl>
                                             <Input type="number" {...field} value={field.value ?? ""} onChange={e => field.onChange(Number(e.target.value))} className="h-14 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white font-black text-right transition-all shadow-inner" />
                                         </FormControl>
@@ -201,6 +228,56 @@ export function EditProductDialog({ product, open, onOpenChange, warehouses }: E
                                     </FormItem>
                                 )}
                             />
+                            <FormField
+                                control={form.control}
+                                name="costPrice"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1 flex items-center gap-2">
+                                            Prix de Revient (DH)
+                                            <span className="bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Admin</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="Coût d'achat réel"
+                                                {...field}
+                                                value={field.value ?? ""}
+                                                onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                                className="h-14 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white font-black text-right transition-all shadow-inner placeholder:text-slate-300"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <FormField
+                            control={form.control}
+                            name="taxRate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="font-black text-slate-700 uppercase text-[10px] tracking-widest ml-1">Taux TVA (%)</FormLabel>
+                                    <Select value={field.value.toString()} onValueChange={(val) => field.onChange(parseFloat(val))}>
+                                        <FormControl>
+                                            <SelectTrigger className="h-14 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white font-black transition-all shadow-inner">
+                                                <SelectValue placeholder="Choisir TVA" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                            <SelectItem value="20" className="font-bold">20% (Standard)</SelectItem>
+                                            <SelectItem value="10" className="font-bold">10% (Réduit)</SelectItem>
+                                            <SelectItem value="7" className="font-bold">7% (Services)</SelectItem>
+                                            <SelectItem value="0" className="font-bold">0% (Exonéré)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="grid grid-cols-2 gap-8 pt-4">
                             <FormField
                                 control={form.control}
                                 name="stock"

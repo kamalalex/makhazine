@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clientSchema } from "@/lib/validations";
-import { createClient } from "@/actions/crm";
+import { updateClient } from "@/actions/crm";
 import {
     Dialog,
     DialogContent,
@@ -22,7 +22,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Loader2 } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
     Select,
@@ -32,9 +32,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 
-export function AddClientDialog() {
+export function EditClientDialog({ client }: { client: any }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -42,36 +41,35 @@ export function AddClientDialog() {
     const form = useForm({
         resolver: zodResolver(clientSchema),
         defaultValues: {
-            type: "B2C",
-            name: "",
-            ice: "",
-            if: "",
-            rc: "",
-            contactName: "",
-            contactPosition: "",
-            email: "",
-            phone: "",
-            billingAddress: "",
-            shippingAddress: "",
-            paymentTerms: 0,
-            paymentMethod: "CASH",
-            defaultDiscount: 0,
-            category: "",
-            tags: [],
-            creditLimit: 0,
-            isProspect: true,
+            type: client.type || "B2C",
+            name: client.name || "",
+            ice: client.ice || "",
+            if: client.if || "",
+            rc: client.rc || "",
+            contactName: client.contactName || "",
+            contactPosition: client.contactPosition || "",
+            email: client.email || "",
+            phone: client.phone || "",
+            billingAddress: client.billingAddress || "",
+            shippingAddress: client.shippingAddress || "",
+            paymentTerms: client.paymentTerms || 0,
+            paymentMethod: client.paymentMethod || "CASH",
+            defaultDiscount: client.defaultDiscount || 0,
+            category: client.category || "",
+            tags: client.tags || [],
+            creditLimit: client.creditLimit || 0,
+            isProspect: client.isProspect ?? true,
         },
     });
 
     async function onSubmit(values: any) {
         setLoading(true);
         try {
-            await createClient(values);
+            await updateClient(client.id, values);
             setOpen(false);
-            form.reset();
             router.refresh();
         } catch (error: any) {
-            alert(error.message || "Erreur lors de la création du client");
+            alert(error.message || "Erreur lors de la mise à jour");
         } finally {
             setLoading(false);
         }
@@ -80,9 +78,9 @@ export function AddClientDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/20 text-white rounded-xl px-6 font-black border-none h-12">
-                    <UserPlus className="mr-2 h-5 w-5" />
-                    Nouveau Partenaire
+                <Button variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all bg-white border border-slate-200">
+                    <Pencil className="mr-2 h-3.5 w-3.5" />
+                    Modifier
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[700px] rounded-[32px] border-none shadow-2xl p-0 overflow-hidden bg-white max-h-[90vh] flex flex-col">
@@ -90,9 +88,9 @@ export function AddClientDialog() {
                 <DialogHeader className="p-8 pb-4 shrink-0">
                     <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                         <div className="bg-orange-100 p-2 rounded-xl">
-                            <UserPlus className="h-6 w-6 text-orange-600" />
+                            <Pencil className="h-6 w-6 text-orange-600" />
                         </div>
-                        Fiche Client / Partenaire
+                        Modifier la Fiche : {client.name}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -154,7 +152,6 @@ export function AddClientDialog() {
                                                     <FormControl>
                                                         <Input placeholder="Identifiant Commun..." {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                                     </FormControl>
-                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
@@ -191,7 +188,6 @@ export function AddClientDialog() {
                                             <FormItem className="flex flex-row items-center justify-between rounded-2xl border border-slate-100 p-4 bg-slate-50/30">
                                                 <div className="space-y-0.5">
                                                     <FormLabel className="text-sm font-black text-slate-800 uppercase tracking-tight">C'est un Prospect ?</FormLabel>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Compte en attente de validation</p>
                                                 </div>
                                                 <FormControl>
                                                     <input
@@ -243,7 +239,6 @@ export function AddClientDialog() {
                                                     <FormControl>
                                                         <Input placeholder="email@exemple.com" {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                                     </FormControl>
-                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
@@ -252,11 +247,10 @@ export function AddClientDialog() {
                                             name="phone"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Téléphone (Obligatoire)</FormLabel>
+                                                    <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Téléphone</FormLabel>
                                                     <FormControl>
                                                         <Input placeholder="06..." {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                                     </FormControl>
-                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
@@ -272,18 +266,6 @@ export function AddClientDialog() {
                                                 <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Adresse de Facturation</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="Adresse complète..." {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="shippingAddress"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Adresse de Livraison</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Si différente de la facturation..." {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                                 </FormControl>
                                             </FormItem>
                                         )}
@@ -357,7 +339,7 @@ export function AddClientDialog() {
                                             name="defaultDiscount"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Remise (0-100%)</FormLabel>
+                                                    <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Remise (%)</FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             type="number"
@@ -371,18 +353,6 @@ export function AddClientDialog() {
                                             )}
                                         />
                                     </div>
-                                    <FormField
-                                        control={form.control}
-                                        name="category"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">Catégorie / Tag</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Grossiste, VIP, Détaillant..." {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
                                 </TabsContent>
                             </Tabs>
                         </div>
@@ -392,7 +362,7 @@ export function AddClientDialog() {
                                 Annuler
                             </Button>
                             <Button type="submit" className="flex-1 h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest border-none shadow-xl shadow-slate-900/10" disabled={loading}>
-                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Créer le Profil"}
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Enregistrer"}
                             </Button>
                         </div>
                     </form>

@@ -14,6 +14,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { NotificationsBell } from "./NotificationsBell";
 
 interface DashboardTopbarProps {
     onMenuClick?: () => void;
@@ -44,10 +45,7 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
                     Support
                 </button>
 
-                <button className="p-2 hover:bg-slate-100 rounded-xl relative transition-colors">
-                    <Bell className="h-5 w-5 text-slate-600" />
-                    <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-600 rounded-full border-2 border-white"></span>
-                </button>
+                <NotificationsBell />
 
                 <div className="h-8 w-[1px] bg-slate-200"></div>
 

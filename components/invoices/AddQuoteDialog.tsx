@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { invoiceSchema } from "@/lib/validations";
-import { createInvoice } from "@/actions/invoices";
+import { createQuote } from "@/actions/invoices";
 import { getClients } from "@/actions/crm";
 import { getProducts } from "@/actions/stock";
 import {
@@ -41,7 +41,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function AddInvoiceDialog() {
+export function AddQuoteDialog() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState<any[]>([]);
@@ -51,8 +51,7 @@ export function AddInvoiceDialog() {
     const form = useForm({
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
-            number: `FAC-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-            poNumber: "",
+            number: `DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
             clientId: "",
             date: new Date(),
             dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
@@ -78,12 +77,12 @@ export function AddInvoiceDialog() {
     async function onSubmit(values: any) {
         setLoading(true);
         try {
-            await createInvoice(values);
+            await createQuote(values);
             setOpen(false);
             form.reset();
             router.refresh();
-        } catch (error: any) {
-            alert(error.message || "Erreur lors de la création");
+        } catch (error) {
+            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -116,9 +115,8 @@ export function AddInvoiceDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/20 text-white rounded-xl px-6 font-black border-none h-12">
-                    <Plus className="mr-2 h-5 w-5" />
-                    Nouvelle Facture
+                <Button variant="outline" className="rounded-xl border-2 font-bold px-6 h-12 hover:bg-white text-slate-600">
+                    <Plus className="mr-2 h-4 w-4" /> Nouveau Devis
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-[32px] border-none shadow-2xl p-0 bg-white">
@@ -126,7 +124,7 @@ export function AddInvoiceDialog() {
                 <DialogHeader className="p-8 pb-4">
                     <DialogTitle className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                         <FileText className="h-8 w-8 text-orange-600" />
-                        Émission de Facture
+                        Proposition Commerciale (Devis)
                     </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
@@ -138,7 +136,7 @@ export function AddInvoiceDialog() {
                                     name="number"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Numéro de Document</FormLabel>
+                                            <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Référence Devis</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="h-12 rounded-xl border-slate-200 bg-slate-50 font-black text-orange-600" />
                                             </FormControl>
@@ -151,11 +149,11 @@ export function AddInvoiceDialog() {
                                     name="clientId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Sélectionner un Client</FormLabel>
+                                            <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Destinataire</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-slate-50 font-bold">
-                                                        <SelectValue placeholder="Choisir un partenaire" />
+                                                        <SelectValue placeholder="Choisir un client" />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent className="rounded-xl border-none shadow-2xl bg-white">
@@ -169,19 +167,6 @@ export function AddInvoiceDialog() {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="poNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Réf. Bon de Commande</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} placeholder="Optionnel" className="h-12 rounded-xl border-slate-200 bg-slate-50 font-bold" />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                             </div>
                             <div className="space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
@@ -190,7 +175,7 @@ export function AddInvoiceDialog() {
                                         name="date"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Date d'Émission</FormLabel>
+                                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Date Devis</FormLabel>
                                                 <FormControl>
                                                     <Input type="date" value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} className="h-12 rounded-xl border-slate-200 bg-slate-50 font-bold" />
                                                 </FormControl>
@@ -203,7 +188,7 @@ export function AddInvoiceDialog() {
                                         name="dueDate"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Échéance</FormLabel>
+                                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Validité</FormLabel>
                                                 <FormControl>
                                                     <Input type="date" value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''} onChange={e => field.onChange(new Date(e.target.value))} className="h-12 rounded-xl border-slate-200 bg-slate-50 font-bold" />
                                                 </FormControl>
@@ -217,7 +202,7 @@ export function AddInvoiceDialog() {
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-end border-b-4 border-slate-900 pb-2">
-                                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Désignation des Articles</h3>
+                                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Articles & Services</h3>
                                 <Button type="button" onClick={() => append({ reference: "", description: "", quantity: 1, price: 0, taxRate: 20 })} variant="ghost" size="sm" className="h-8 text-orange-600 font-black text-[10px] uppercase tracking-widest hover:bg-orange-50">
                                     <Plus className="h-3 w-3 mr-1" /> Ajouter une ligne
                                 </Button>
@@ -233,7 +218,7 @@ export function AddInvoiceDialog() {
                                     <div className="col-span-1"></div>
                                 </div>
                                 {fields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-12 gap-3 items-start group animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div key={field.id} className="grid grid-cols-12 gap-3 items-start animate-in fade-in slide-in-from-right-4 duration-300">
                                         <div className="col-span-1">
                                             <Input placeholder="Ref" {...form.register(`items.${index}.reference` as const)} className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold text-[9px] px-1" />
                                         </div>
@@ -291,7 +276,6 @@ export function AddInvoiceDialog() {
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
-
                                     </div>
                                 ))}
                             </div>
@@ -300,13 +284,13 @@ export function AddInvoiceDialog() {
                         <div className="flex flex-col md:flex-row gap-8 justify-between bg-slate-900 text-white rounded-[24px] p-8 mt-12 shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600 rounded-full -mr-32 -mt-32 opacity-20" />
                             <div className="space-y-4 max-w-sm relative z-10">
-                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Notes Additionnelles</FormLabel>
-                                <textarea {...form.register("notes")} className="w-full bg-slate-800 rounded-xl border-none p-4 text-xs font-medium focus:ring-1 focus:ring-orange-500 h-24 placeholder:text-slate-600" placeholder="Coordonnées bancaires, conditions de vente..."></textarea>
+                                <FormLabel className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] ml-1">Notes Devis</FormLabel>
+                                <textarea {...form.register("notes")} className="w-full bg-slate-800 rounded-xl border-none p-4 text-xs font-medium focus:ring-1 focus:ring-orange-500 h-24 placeholder:text-slate-600" placeholder="Validité de l'offre, délais de livraison..."></textarea>
                             </div>
 
                             <div className="space-y-4 min-w-[240px] relative z-10">
                                 <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    <span>Sous-Total HT</span>
+                                    <span>Total HT</span>
                                     <span>{subtotal.toFixed(2)} DH</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -315,13 +299,13 @@ export function AddInvoiceDialog() {
                                 </div>
                                 <div className="h-[1px] bg-slate-800 w-full" />
                                 <div className="flex justify-between items-center py-2">
-                                    <span className="font-black text-orange-500 uppercase text-xs tracking-[0.2em]">Total Net à Payer</span>
+                                    <span className="font-black text-orange-500 uppercase text-xs tracking-[0.2em]">Total TTC Estimé</span>
                                     <span className="text-3xl font-black">{total.toFixed(2)} DH</span>
                                 </div>
                                 <Button type="submit" className="w-full h-14 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-black border-none text-base shadow-xl shadow-orange-600/20" disabled={loading}>
                                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                                         <span className="flex items-center gap-2">
-                                            Valider la Facture <Check className="h-5 w-5" />
+                                            Valider le Devis <Check className="h-5 w-5" />
                                         </span>
                                     )}
                                 </Button>

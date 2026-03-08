@@ -90,6 +90,9 @@ export function StockHistoryDialog({ product, open, onOpenChange }: StockHistory
                                                     {format(new Date(m.createdAt), "dd MMM yyyy", { locale: fr })}
                                                 </div>
                                                 <span className="text-[9px] font-bold text-slate-300 mt-1 uppercase">{format(new Date(m.createdAt), "HH:mm")}</span>
+                                                {m.createdByName && (
+                                                    <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest mt-1">Par: {m.createdByName}</span>
+                                                )}
                                             </div>
                                         </div>
                                         {m.note && (

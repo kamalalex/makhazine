@@ -10,7 +10,7 @@ export async function getWarehouses() {
     if (!session) throw new Error("Non autorisé");
 
     return await prisma.warehouse.findMany({
-        where: { userId: session.user.id },
+        where: { userId: (session.user as any).adminId || session.user.id },
         orderBy: { createdAt: "desc" },
         include: {
             stocks: {
@@ -57,7 +57,7 @@ export async function createWarehouse(data: {
     const warehouse = await prisma.warehouse.create({
         data: {
             ...data,
-            userId: session.user.id,
+            userId: (session.user as any).adminId || session.user.id,
         }
     });
 
@@ -71,7 +71,7 @@ export async function updateWarehouse(id: string, data: any) {
     if (!session) throw new Error("Non autorisé");
 
     const warehouse = await prisma.warehouse.update({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         data
     });
 
@@ -84,7 +84,7 @@ export async function deleteWarehouse(id: string) {
     if (!session) throw new Error("Non autorisé");
 
     await prisma.warehouse.delete({
-        where: { id, userId: session.user.id }
+        where: { id, userId: (session.user as any).adminId || session.user.id }
     });
 
     revalidatePath("/dashboard/warehouses");

@@ -11,7 +11,7 @@ export async function getClients() {
     if (!session) throw new Error("Non autorisé");
 
     return await (prisma.client as any).findMany({
-        where: { userId: session.user.id },
+        where: { userId: (session.user as any).adminId || session.user.id },
         include: {
             invoices: {
                 select: {
@@ -33,14 +33,14 @@ export async function createClient(data: any) {
     // Anti-doublon check
     if (validatedData.email) {
         const existingEmail = await (prisma.client as any).findFirst({
-            where: { email: validatedData.email, userId: session.user.id }
+            where: { email: validatedData.email, userId: (session.user as any).adminId || session.user.id }
         });
         if (existingEmail) throw new Error("Un client avec cet email existe déjà.");
     }
 
     if (validatedData.ice) {
         const existingIce = await (prisma.client as any).findFirst({
-            where: { ice: validatedData.ice, userId: session.user.id }
+            where: { ice: validatedData.ice, userId: (session.user as any).adminId || session.user.id }
         });
         if (existingIce) throw new Error("Un client avec cet ICE existe déjà.");
     }
@@ -49,7 +49,8 @@ export async function createClient(data: any) {
         const client = await (prisma.client as any).create({
             data: {
                 ...validatedData,
-                userId: session.user.id,
+                userId: (session.user as any).adminId || session.user.id,
+                createdByName: session.user.name,
             },
         });
 
@@ -67,7 +68,7 @@ export async function updateClient(id: string, data: any) {
     const validatedData = clientSchema.parse(data);
 
     const client = await prisma.client.update({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         data: validatedData,
     });
 
@@ -80,7 +81,7 @@ export async function archiveClient(id: string) {
     if (!session) throw new Error("Non autorisé");
 
     await (prisma.client as any).update({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         data: { isArchived: true },
     });
 
@@ -92,7 +93,7 @@ export async function getClientStats(clientId: string) {
     if (!session) throw new Error("Non autorisé");
 
     const clientRaw = await prisma.client.findUnique({
-        where: { id: clientId, userId: session.user.id },
+        where: { id: clientId, userId: (session.user as any).adminId || session.user.id },
         include: {
             invoices: {
                 select: {
@@ -149,7 +150,7 @@ export async function toggleAutoReminders(clientId: string, enabled: boolean) {
     if (!session) throw new Error("Non autorisé");
 
     await prisma.client.update({
-        where: { id: clientId, userId: session.user.id },
+        where: { id: clientId, userId: (session.user as any).adminId || session.user.id },
         data: { autoRemindersEnabled: enabled },
     });
 

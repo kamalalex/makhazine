@@ -11,7 +11,7 @@ export async function getInvoices() {
     if (!session) throw new Error("Non autorisé");
 
     return await prisma.invoice.findMany({
-        where: { userId: session.user.id },
+        where: { userId: (session.user as any).adminId || session.user.id },
         include: {
             client: true,
             payments: true
@@ -37,7 +37,7 @@ export async function createInvoice(data: any) {
 
     // Financial Risk Check: Credit Limit
     const client = await prisma.client.findFirst({
-        where: { id: validatedData.clientId, userId: session.user.id },
+        where: { id: validatedData.clientId, userId: (session.user as any).adminId || session.user.id },
         include: {
             invoices: {
                 where: {
@@ -63,7 +63,8 @@ export async function createInvoice(data: any) {
         data: {
             number: validatedData.number,
             clientId: validatedData.clientId,
-            userId: session.user.id,
+            userId: (session.user as any).adminId || session.user.id,
+            createdByName: session.user.name,
             date: validatedData.date,
             dueDate: validatedData.dueDate,
             taxRate: validatedData.taxRate, // Keep for backward compatibility/global info
@@ -117,7 +118,8 @@ export async function createQuote(data: any) {
         data: {
             number: validatedData.number,
             clientId: validatedData.clientId,
-            userId: session.user.id,
+            userId: (session.user as any).adminId || session.user.id,
+            createdByName: session.user.name,
             date: validatedData.date,
             validUntil: validatedData.dueDate,
             taxRate: validatedData.taxRate,
@@ -147,7 +149,7 @@ export async function getInvoiceById(id: string) {
     if (!session) throw new Error("Non autorisé");
 
     return await prisma.invoice.findUnique({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         include: {
             client: true,
             items: true,
@@ -165,7 +167,7 @@ export async function getQuotes() {
     if (!session) throw new Error("Non autorisé");
 
     return await prisma.quote.findMany({
-        where: { userId: session.user.id },
+        where: { userId: (session.user as any).adminId || session.user.id },
         include: { client: true, items: true },
         orderBy: { createdAt: "desc" },
     });
@@ -176,7 +178,7 @@ export async function getQuoteById(id: string) {
     if (!session) throw new Error("Non autorisé");
 
     return await prisma.quote.findUnique({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         include: {
             client: true,
             items: true,
@@ -202,7 +204,7 @@ export async function updateQuote(id: string, data: any) {
     await (prisma as any).quoteItem.deleteMany({ where: { quoteId: id } });
 
     const quote = await (prisma.quote as any).update({
-        where: { id, userId: session.user.id },
+        where: { id, userId: (session.user as any).adminId || session.user.id },
         data: {
             number: validatedData.number,
             clientId: validatedData.clientId,
@@ -258,7 +260,8 @@ export async function convertQuoteToInvoice(quoteId: string, customData?: any) {
         data: {
             number: validatedData.number,
             clientId: validatedData.clientId,
-            userId: session.user.id,
+            userId: (session.user as any).adminId || session.user.id,
+            createdByName: session.user.name,
             date: validatedData.date,
             dueDate: validatedData.dueDate,
             taxRate: validatedData.taxRate,
@@ -317,7 +320,8 @@ export async function createDeliveryNote(invoiceId: string) {
             number: blNumber,
             invoiceId: invoice.id,
             clientId: invoice.clientId,
-            userId: session.user.id,
+            userId: (session.user as any).adminId || session.user.id,
+            createdByName: session.user.name,
             items: {
                 create: invoice.items.map((item: any) => ({
                     reference: item.reference,

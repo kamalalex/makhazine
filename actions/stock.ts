@@ -10,7 +10,7 @@ export async function getProducts(search?: string, category?: string, status?: s
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Non autorisé");
 
-    const where: any = { userId: session.user.id };
+    const where: any = { userId: (session.user as any).adminId || session.user.id };
 
     if (search) {
         where.OR = [
@@ -74,8 +74,7 @@ export async function getCategories() {
     if (!session) throw new Error("Non autorisé");
 
     const products = await prisma.product.findMany({
-        where: {
-            userId: session.user.id,
+        where: { userId: (session.user as any).adminId || session.user.id,
             category: { not: "" }
         },
         select: { category: true },
@@ -95,7 +94,8 @@ export async function createProduct(data: any, warehouseId?: string) {
         const p = await tx.product.create({
             data: {
                 ...validatedData,
-                userId: session.user.id,
+                userId: (session.user as any).adminId || session.user.id,
+            createdByName: session.user.name,
             },
         });
 
@@ -110,14 +110,14 @@ export async function createProduct(data: any, warehouseId?: string) {
             });
 
             // Log initial movement
-            await tx.stockMovement.create({
-                data: {
+            await tx.stockMovement.create({ data: {
                     type: "IN",
                     quantity: validatedData.stock,
                     note: "Stock initial",
                     productId: p.id,
                     warehouseId: warehouseId,
-                    userId: session.user.id
+                    userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                 }
             });
         }
@@ -138,7 +138,7 @@ export async function updateProduct(id: string, data: any, warehouseId?: string)
     const product = await prisma.$transaction(async (tx: any) => {
         // Get current product to check stock difference
         const currentProduct = await tx.product.findUnique({
-            where: { id, userId: session.user.id },
+            where: { id, userId: (session.user as any).adminId || session.user.id },
             include: { warehouseStocks: true }
         });
 
@@ -171,14 +171,14 @@ export async function updateProduct(id: string, data: any, warehouseId?: string)
                     });
 
                     // Log adjustment
-                    await tx.stockMovement.create({
-                        data: {
+                    await tx.stockMovement.create({ data: {
                             type: diff > 0 ? "IN" : "OUT",
                             quantity: Math.abs(diff),
                             note: "Ajustement via modification fiche",
                             productId: id,
                             warehouseId: warehouseId,
-                            userId: session.user.id
+                            userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                         }
                     });
                 }
@@ -197,14 +197,14 @@ export async function updateProduct(id: string, data: any, warehouseId?: string)
                 });
 
                 if (diff > 0) {
-                    await tx.stockMovement.create({
-                        data: {
+                    await tx.stockMovement.create({ data: {
                             type: "IN",
                             quantity: diff,
                             note: "Allocation initiale (ajustement total)",
                             productId: id,
                             warehouseId: warehouseId,
-                            userId: session.user.id
+                            userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                         }
                     });
                 }
@@ -225,7 +225,7 @@ export async function deleteProduct(id: string) {
     await prisma.product.delete({
         where: {
             id,
-            userId: session.user.id
+            userId: (session.user as any).adminId || session.user.id
         },
     });
 
@@ -238,14 +238,14 @@ export async function createStockMovement(productId: string, type: "IN" | "OUT",
 
     const movement = await prisma.$transaction(async (tx: any) => {
         // Create movement
-        const m = await tx.stockMovement.create({
-            data: {
+        const m = await tx.stockMovement.create({ data: {
                 type,
                 quantity,
                 note,
                 productId,
                 warehouseId,
-                userId: session.user.id
+                userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
             }
         });
 
@@ -295,7 +295,7 @@ export async function getProductHistory(productId: string) {
     return await prisma.stockMovement.findMany({
         where: {
             productId,
-            userId: session.user.id
+            userId: (session.user as any).adminId || session.user.id
         },
         orderBy: { createdAt: "desc" },
         include: {
@@ -337,14 +337,14 @@ export async function transferStock(
             });
 
             // Log OUT for source
-            await tx.stockMovement.create({
-                data: {
+            await tx.stockMovement.create({ data: {
                     type: "OUT",
                     quantity,
                     note: `Transfert vers ${toWarehouseId === "default" ? "Stock Global" : "autre dépôt"}. ${note || ""}`,
                     productId,
                     warehouseId: fromWarehouseId,
-                    userId: session.user.id
+                    userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                 }
             });
         } else {
@@ -364,13 +364,13 @@ export async function transferStock(
             }
 
             // Log OUT for global (unassigned part)
-            await tx.stockMovement.create({
-                data: {
+            await tx.stockMovement.create({ data: {
                     type: "OUT",
                     quantity,
                     note: `Transfert depuis stock non affecté towards warehouse. ${note || ""}`,
                     productId,
-                    userId: session.user.id
+                    userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                 }
             });
         }
@@ -395,27 +395,27 @@ export async function transferStock(
             }
 
             // Log IN for destination
-            await tx.stockMovement.create({
-                data: {
+            await tx.stockMovement.create({ data: {
                     type: "IN",
                     quantity,
                     note: `Transfert reçu de ${fromWarehouseId === "default" ? "Stock Global" : "autre dépôt"}. ${note || ""}`,
                     productId,
                     warehouseId: toWarehouseId,
-                    userId: session.user.id
+                    userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                 }
             });
         } else {
             // Transferring back to "Global/Unassigned" pool
             // No need to update product.stock as it already includes this quantity globally
             // Just log the movement to track the return to unassigned status
-            await tx.stockMovement.create({
-                data: {
+            await tx.stockMovement.create({ data: {
                     type: "IN",
                     quantity,
                     note: `Retour vers stock non affecté. ${note || ""}`,
                     productId,
-                    userId: session.user.id
+                    userId: (session.user as any).adminId || session.user.id,
+                    createdByName: session.user.name
                 }
             });
         }

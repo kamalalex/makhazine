@@ -13,6 +13,10 @@ import {
     LogOut,
     ShieldCheck,
     X,
+    ShoppingCart,
+    Truck,
+    TrendingUp,
+    Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,7 +28,11 @@ const navigation = [
     { name: "Gestion de Stock", href: "/dashboard/stock", icon: Package },
     { name: "Mes Dépôts", href: "/dashboard/warehouses", icon: Building2 },
     { name: "CRM / Clients", href: "/dashboard/crm", icon: Users },
+    { name: "Fournisseurs", href: "/dashboard/suppliers", icon: Truck },
+    { name: "Achats", href: "/dashboard/purchases", icon: ShoppingCart },
     { name: "Devis & Factures", href: "/dashboard/invoices", icon: FileText },
+    { name: "Trésorerie", href: "/dashboard/treasury", icon: Wallet },
+    { name: "Productivité", href: "/dashboard/productivity", icon: TrendingUp },
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -37,8 +45,50 @@ export function DashboardSidebar({ className, onClose }: DashboardSidebarProps) 
     const pathname = usePathname();
     const { data: session } = useSession();
     const isAdmin = session?.user?.role === "ADMIN";
+    const isCommercial = session?.user?.role === "COMMERCIAL";
+    const isStorekeeper = session?.user?.role === "MAGASINIER";
+    const rolePermissions = (session?.user as any)?.rolePermissions;
 
-    const filteredNavigation = [...navigation];
+    let filteredNavigation = navigation.filter(item => {
+        if (isAdmin) return true;
+
+        if (rolePermissions) {
+            const role = session?.user?.role;
+            if (role && rolePermissions[role]) {
+                const allowed = rolePermissions[role] as string[];
+                const moduleMap: Record<string, string> = {
+                    "/dashboard/stock": "STOCK",
+                    "/dashboard/warehouses": "STOCK",
+                    "/dashboard/crm": "CRM",
+                    "/dashboard/suppliers": "PURCHASES",
+                    "/dashboard/purchases": "PURCHASES",
+                    "/dashboard/invoices": "INVOICES",
+                    "/dashboard/treasury": "TREASURY",
+                };
+                const module = moduleMap[item.href];
+                if (module) return allowed.includes(module);
+            }
+        }
+
+        // Hardcoded defaults for fallback or if no permissions set
+        if (isCommercial) {
+            // A commercial should not see Stock, Warehouses, Purchases, Suppliers, Treasury
+            if (["/dashboard/stock", "/dashboard/warehouses", "/dashboard/purchases", "/dashboard/suppliers", "/dashboard/treasury"].includes(item.href)) {
+                return false;
+            }
+        }
+        if (isStorekeeper) {
+            // A storekeeper should only see Stock, Warehouses
+            if (["/dashboard/crm", "/dashboard/invoices", "/dashboard/purchases", "/dashboard/suppliers", "/dashboard/treasury"].includes(item.href)) {
+                return false;
+            }
+        }
+        // Admin only items
+        if (item.href === "/dashboard/productivity" && !isAdmin) return false;
+
+        return true;
+    });
+
     if (isAdmin) {
         filteredNavigation.push({ name: "Espace Admin", href: "/admin", icon: ShieldCheck });
     }

@@ -61,3 +61,29 @@ export const paymentSchema = z.object({
     notes: z.string().optional().or(z.literal("")),
 });
 
+export const supplierSchema = z.object({
+    name: z.string().min(1, "Nom du fournisseur requis"),
+    contactName: z.string().optional().or(z.literal("")),
+    email: z.string().email("Email invalide").optional().or(z.literal("")),
+    phone: z.string().optional().or(z.literal("")),
+    address: z.string().optional().or(z.literal("")),
+    ice: z.string().optional().or(z.literal("")),
+});
+
+export const purchaseOrderSchema = z.object({
+    supplierId: z.string().min(1, "Fournisseur requis"),
+    number: z.string().min(1, "Numéro BC requis"),
+    date: z.date().default(() => new Date()),
+    expectedDate: z.date().optional().nullable(),
+    notes: z.string().optional().or(z.literal("")),
+    items: z.array(z.object({
+        productId: z.string().min(1, "Produit requis"),
+        name: z.string().optional(),
+        orderedQuantity: z.coerce.number().min(1, "Quantité invalide"),
+        unitPrice: z.coerce.number().min(0, "Prix invalide"),
+        taxRate: z.coerce.number().min(0).default(20),
+        unitOfMeasure: z.string().default("UNIT"),
+        conversionFactor: z.coerce.number().min(0.01).default(1),
+    })).min(1, "Au moins un article requis"),
+});
+

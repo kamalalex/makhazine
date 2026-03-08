@@ -14,6 +14,7 @@ import { History, ArrowUpRight, ArrowDownRight, Calendar, Package, ArrowRightLef
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportMovementsToExcel } from "@/lib/excel-export";
+import { useSession } from "next-auth/react";
 
 interface WarehouseHistoryDialogProps {
     warehouse: any;
@@ -24,6 +25,8 @@ interface WarehouseHistoryDialogProps {
 export function WarehouseHistoryDialog({ warehouse, open, onOpenChange }: WarehouseHistoryDialogProps) {
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === "ADMIN";
 
     useEffect(() => {
         if (open && warehouse?.id) {
@@ -44,7 +47,7 @@ export function WarehouseHistoryDialog({ warehouse, open, onOpenChange }: Wareho
                         <div className="bg-orange-50 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 border border-orange-100/50">
                             <History className="h-6 w-6 text-orange-600" />
                         </div>
-                        {history.length > 0 && (
+                        {isAdmin && history.length > 0 && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -102,6 +105,9 @@ export function WarehouseHistoryDialog({ warehouse, open, onOpenChange }: Wareho
                                                     {format(new Date(m.createdAt), "dd MMM yyyy", { locale: fr })}
                                                 </div>
                                                 <span className="text-[9px] font-bold text-slate-300 mt-1 uppercase">{format(new Date(m.createdAt), "HH:mm")}</span>
+                                                {m.createdByName && (
+                                                    <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest mt-1">Par: {m.createdByName}</span>
+                                                )}
                                             </div>
                                         </div>
                                         {m.note && (

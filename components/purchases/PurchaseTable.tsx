@@ -28,16 +28,11 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    MoreHorizontal,
     Eye,
-    TrendingUp,
-    CreditCard,
-    ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
-import { EditClientDialog } from "./EditClientDialog";
 
-export function ClientTable({ data }: { data: any[] }) {
+export function PurchaseTable({ data }: { data: any[] }) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -45,53 +40,71 @@ export function ClientTable({ data }: { data: any[] }) {
 
     const columns: ColumnDef<any>[] = [
         {
-            accessorKey: "name",
-            header: "Client / Entreprise",
+            accessorKey: "number",
+            header: "N° BC",
             cell: ({ row }) => {
-                const client = row.original;
+                const po = row.original;
                 return (
                     <div className="flex flex-col">
-                        <span className="font-black text-slate-900 uppercase text-xs tracking-tight">{client.name}</span>
-                        {client.createdByName && (
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Par: {client.createdByName}</span>
+                        <span className="font-black text-slate-900 uppercase text-xs tracking-tight">{po.number}</span>
+                        {po.createdByName && (
+                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Par: {po.createdByName}</span>
                         )}
                     </div>
                 );
             },
         },
         {
-            id: "tax_ids",
-            header: "ICE / IF",
+            accessorKey: "supplier.name",
+            header: "Fournisseur",
             cell: ({ row }) => {
-                const client = row.original;
+                const po = row.original;
+                return (
+                    <span className="font-bold text-slate-700 uppercase text-[10px] tracking-widest">{po.supplier?.name || "—"}</span>
+                );
+            },
+        },
+        {
+            accessorKey: "date",
+            header: "Date d'émission",
+            cell: ({ row }) => {
+                const po = row.original;
                 return (
                     <span className="text-[10px] font-bold text-slate-500">
-                        {client.ice || "—"}{client.if ? ` / ${client.if}` : ""}
+                        {new Date(po.date).toLocaleDateString()}
                     </span>
                 );
             },
         },
         {
-            accessorKey: "isProspect",
+            accessorKey: "status",
             header: "Statut",
             cell: ({ row }) => {
-                const isProspect = row.getValue("isProspect");
-                return isProspect ? (
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-3 h-6 font-black uppercase text-[9px] rounded-full">Piste</Badge>
-                ) : (
-                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-3 h-6 font-black uppercase text-[9px] rounded-full tracking-wider">Partenaire</Badge>
+                const status = row.original.status;
+                let statusColor = "bg-slate-100 text-slate-700";
+                let statusText = "BROUILLON";
+
+                if (status === "ORDERED") { statusColor = "bg-blue-100 text-blue-700"; statusText = "COMMANDÉ"; }
+                if (status === "PARTIAL") { statusColor = "bg-orange-100 text-orange-700"; statusText = "PARTIEL"; }
+                if (status === "RECEIVED") { statusColor = "bg-emerald-100 text-emerald-700"; statusText = "REÇU"; }
+                if (status === "INVOICED") { statusColor = "bg-purple-100 text-purple-700"; statusText = "FACTURE REÇUE"; }
+
+                return (
+                    <Badge className={`${statusColor} border-none px-3 h-6 font-black uppercase text-[9px] rounded-full tracking-wider`}>
+                        {statusText}
+                    </Badge>
                 );
             },
         },
         {
             id: "actions",
-            header: () => <div className="text-right">Action</div>,
+            header: () => <div className="text-right">Détails</div>,
             cell: ({ row }) => {
-                const client = row.original;
+                const po = row.original;
                 return (
                     <div className="flex items-center justify-end">
-                        <Button asChild variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-slate-900 hover:text-white transition-all bg-white border border-slate-200 shadow-sm">
-                            <Link href={`/dashboard/crm/${client.id}`}><Eye className="h-4 w-4" /></Link>
+                        <Button asChild variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-emerald-600 hover:text-white transition-all bg-white border border-slate-200 shadow-sm">
+                            <Link href={`/dashboard/purchases/${po.id}`}><Eye className="h-4 w-4" /></Link>
                         </Button>
                     </div>
                 );
@@ -125,16 +138,16 @@ export function ClientTable({ data }: { data: any[] }) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 px-8 pt-4">
                 <div className="relative w-full max-w-sm group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
                     <Input
-                        placeholder="Rechercher un client (Nom, ICE, Email...)"
-                        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                        placeholder="Chercher Numéro ou Fournisseur..."
+                        value={(table.getColumn("number")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("name")?.setFilterValue(event.target.value)
+                            table.getColumn("number")?.setFilterValue(event.target.value)
                         }
-                        className="h-12 pl-12 rounded-2xl border-slate-200 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500/20 transition-all font-medium"
+                        className="h-12 pl-12 rounded-2xl border-slate-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20 transition-all font-medium"
                     />
                 </div>
 
@@ -150,7 +163,7 @@ export function ClientTable({ data }: { data: any[] }) {
                     </Button>
                     <div className="flex items-center gap-1">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                            Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                            Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
                         </span>
                     </div>
                     <Button
@@ -165,7 +178,7 @@ export function ClientTable({ data }: { data: any[] }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+            <div className="bg-white">
                 <Table>
                     <TableHeader className="bg-slate-50/50">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -209,7 +222,7 @@ export function ClientTable({ data }: { data: any[] }) {
                                     colSpan={columns.length}
                                     className="h-40 text-center text-slate-400 font-bold uppercase text-xs tracking-widest"
                                 >
-                                    Aucun résultat trouvé.
+                                    Aucun bon de commande trouvé.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -217,13 +230,10 @@ export function ClientTable({ data }: { data: any[] }) {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between px-4">
+            <div className="flex items-center justify-between px-8 pb-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Total: {data.length} Partenaires répertoriés
+                    Total: {data.length} bons
                 </p>
-                <div className="flex gap-1">
-                    {/* Could add page size selector here if needed */}
-                </div>
             </div>
         </div>
     );

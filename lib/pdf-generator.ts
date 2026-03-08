@@ -1,6 +1,87 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+
+const formatMoney = (val: number) => {
+    const parts = val.toFixed(2).split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts.join(".");
+};
+
+function numberToFrenchWords(number: number): string {
+    if (number === 0) return "zéro";
+
+    const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
+    const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
+
+    const convertBelow100 = (n: number): string => {
+        if (n < 20) return units[n];
+        const ten = Math.floor(n / 10);
+        const unit = n % 10;
+
+        if (ten === 7 || ten === 9) {
+            if (unit === 1 && ten === 7) return tens[ten - 1] + " et onze";
+            const u = unit + 10;
+            return tens[ten - 1] + " " + units[u];
+        }
+
+        if (unit === 0) return tens[ten];
+        if (unit === 1 && ten < 8) return tens[ten] + " et un";
+        return tens[ten] + (unit > 0 ? " " + units[unit] : "");
+    };
+
+    const convertBelow1000 = (n: number): string => {
+        if (n < 100) return convertBelow100(n);
+        const hundred = Math.floor(n / 100);
+        const rest = n % 100;
+
+        let res = "";
+        if (hundred === 1) res = "cent";
+        else res = units[hundred] + " cent" + (rest === 0 && hundred > 1 ? "s" : "");
+
+        if (rest > 0) res += " " + convertBelow100(rest);
+        return res;
+    };
+
+    const scales = ["", "mille", "million", "milliard"];
+
+    const convertGroup = (n: number, scaleIndex: number): string => {
+        if (n === 0) return "";
+        let str = convertBelow1000(n);
+
+        if (scaleIndex === 1 && n === 1) return "mille";
+
+        if (scaleIndex > 0) {
+            str += " " + scales[scaleIndex];
+            if (n > 1 && scaleIndex > 1) str += "s";
+        }
+        return str;
+    };
+
+    const parts = [];
+    let scaleIndex = 0;
+    let remaining = number;
+
+    while (remaining > 0) {
+        const group = remaining % 1000;
+        if (group > 0) {
+            parts.push(convertGroup(group, scaleIndex));
+        }
+        remaining = Math.floor(remaining / 1000);
+        scaleIndex++;
+    }
+
+    return parts.reverse().join(" ").trim();
+}
+
+function currencyToWords(amount: number): string {
+    const dirhams = Math.floor(amount);
+    const centimes = Math.round((amount - dirhams) * 100);
+    let str = numberToFrenchWords(dirhams) + " Dirham" + (dirhams > 1 ? "s" : "");
+    if (centimes > 0) {
+        str += " et " + numberToFrenchWords(centimes) + " Centime" + (centimes > 1 ? "s" : "");
+    }
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 interface PDFData {
     id: string;
@@ -18,13 +99,14 @@ interface PDFData {
     company: any;
     quoteNumber?: string | null;
     poNumber?: string | null;
+    user?: any;
 }
 
 export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOTE" | "DELIVERY_NOTE" = "INVOICE", returnBase64: boolean = false) => {
     const doc = new jsPDF();
     const taxRate = data.taxRate ?? 20;
     const discount = data.discount ?? 0;
-    const { number, date, dueDate, validUntil, total, items, client, company, notes, quoteNumber, poNumber } = data;
+    const { number, date, dueDate, validUntil, total, items, client, company, notes, quoteNumber, poNumber, user } = data;
     const expiryDate = validUntil || dueDate || new Date();
 
     const isBL = type === "DELIVERY_NOTE";
@@ -39,6 +121,7 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(0, 0, 210, 8, "F");
 
+    let nameX = 20;
     if (company.logo) {
         try {
             const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -48,19 +131,23 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
                 i.onerror = reject;
                 i.src = company.logo;
             });
-            doc.addImage(img, "PNG", 20, 15, 30, 15);
+            let imgWidth = 30;
+            let imgHeight = img.width > 0 ? (img.height * imgWidth) / img.width : 15;
+            if (imgHeight > 15) {
+                imgHeight = 15;
+                imgWidth = img.height > 0 ? (img.width * imgHeight) / img.height : 30;
+            }
+            doc.addImage(img, "PNG", 20, 15 + (15 - imgHeight) / 2, imgWidth, imgHeight);
+            nameX = 20 + imgWidth + 5;
         } catch (e) {
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(24);
-            doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-            doc.text(company.name || "MAKHAZINE", 20, 30);
+            console.error(e);
         }
-    } else {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(24);
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text(company.name || "MAKHAZINE", 20, 30);
     }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text(company.name || "MAKHAZINE", nameX, 28);
 
     doc.setFontSize(10);
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
@@ -75,15 +162,11 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
     let typeLabel = "FACTURE";
     if (type === "QUOTE") typeLabel = "DEVIS";
     if (type === "DELIVERY_NOTE") typeLabel = "BON DE LIVRAISON";
-    doc.text(typeLabel, 190, 30, { align: "right" });
-
-    doc.setFontSize(12);
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(number, 190, 38, { align: "right" });
+    doc.text(`${typeLabel} : ${number}`, 20, 50);
 
     // Client & Dates
     doc.setDrawColor(241, 245, 249);
-    doc.line(20, 55, 190, 55);
+    doc.line(20, 56, 190, 56);
     doc.setFontSize(10);
     doc.setTextColor(lightText[0], lightText[1], lightText[2]);
     doc.setFont("helvetica", "bold");
@@ -106,20 +189,32 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     doc.setFont("helvetica", "normal");
     doc.text(`Date: ${format(new Date(date), "dd/MM/yyyy")}`, 190, 72, { align: "right" });
+
+    let refY = 78;
     if (!isBL) {
-        doc.text(`Échéance/Validité: ${format(new Date(expiryDate), "dd/MM/yyyy")}`, 190, 78, { align: "right" });
-        let refY = 84;
+        doc.text(`Échéance/Validité: ${format(new Date(expiryDate), "dd/MM/yyyy")}`, 190, refY, { align: "right" });
+        refY += 6;
         if (quoteNumber) {
             doc.text(`Réf Devis: ${quoteNumber}`, 190, refY, { align: "right" });
             refY += 6;
         }
         if (poNumber) {
             doc.text(`Réf BC: ${poNumber}`, 190, refY, { align: "right" });
+            refY += 6;
+        }
+    }
+
+    if (user) {
+        doc.text(`Affaire suivie par: ${user.name || "—"}`, 190, refY, { align: "right" });
+        refY += 6;
+        if (user.email) {
+            doc.text(`${user.email}`, 190, refY, { align: "right" });
+            refY += 6;
         }
     }
 
     // Table
-    const tableTop = 100;
+    const tableTop = Math.max(100, Math.max(90, refY + 4));
     doc.setFillColor(248, 250, 252);
     doc.rect(20, tableTop, 170, 10, "F");
     doc.setFont("helvetica", "bold");
@@ -153,10 +248,10 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
 
         if (!isBL) {
             doc.text(item.quantity.toString(), 110, currentY, { align: "center" });
-            doc.text(`${item.price.toFixed(2)} DH`, 135, currentY, { align: "center" });
+            doc.text(`${formatMoney(item.price)} DH`, 135, currentY, { align: "center" });
             const itemTaxRate = item.taxRate ?? taxRate;
             doc.text(`${itemTaxRate}%`, 158, currentY, { align: "center" });
-            doc.text(`${(item.quantity * item.price).toFixed(2)} DH`, 185, currentY, { align: "right" });
+            doc.text(`${formatMoney(item.quantity * item.price)} DH`, 185, currentY, { align: "right" });
         } else {
             doc.text(item.quantity.toString(), 130, currentY, { align: "center" });
         }
@@ -166,7 +261,7 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
     // Totals Section (Only for Facture/Devis)
     if (!isBL) {
         currentY += 10;
-        const totalsX = 140;
+        const totalsX = 125;
         doc.setFontSize(10);
         doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
 
@@ -186,28 +281,39 @@ export const generateDocumentPDF = async (data: PDFData, type: "INVOICE" | "QUOT
         });
 
         doc.text("TOTAL HT", totalsX, currentY);
-        doc.text(`${subtotal.toFixed(2)} DH`, 185, currentY, { align: "right" });
+        doc.text(`${formatMoney(subtotal)} DH`, 185, currentY, { align: "right" });
         currentY += 8;
 
         // Show each TVA rate group
         Object.entries(taxGroups).forEach(([rate, amount]) => {
             doc.text(`TVA (${rate}%)`, totalsX, currentY);
-            doc.text(`${amount.toFixed(2)} DH`, 185, currentY, { align: "right" });
+            doc.text(`${formatMoney(amount)} DH`, 185, currentY, { align: "right" });
             currentY += 8;
         });
 
         if (discount > 0) {
             doc.text("REMISE", totalsX, currentY);
-            doc.text(`-${discount.toFixed(2)} DH`, 185, currentY, { align: "right" });
+            doc.text(`-${formatMoney(discount)} DH`, 185, currentY, { align: "right" });
             currentY += 8;
         }
+
         currentY += 4;
         doc.setFillColor(darkText[0], darkText[1], darkText[2]);
-        doc.rect(totalsX - 5, currentY - 8, 55, 12, "F");
+        doc.rect(totalsX - 5, currentY - 8, 70, 12, "F");
         doc.setFont("helvetica", "bold");
         doc.setTextColor(255, 255, 255);
         doc.text("TOTAL NET TTC", totalsX, currentY);
-        doc.text(`${total.toFixed(2)} DH`, 185, currentY, { align: "right" });
+        doc.text(`${formatMoney(total)} DH`, 185, currentY, { align: "right" });
+
+        // Add amount in words
+        currentY += 12;
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(9);
+        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+        doc.text(`Arrêtée la présente ${typeLabel.toLowerCase()} à la somme de :`, 20, currentY);
+        currentY += 5;
+        doc.setFont("helvetica", "bold");
+        doc.text(currencyToWords(total), 20, currentY);
     } else {
         // BL Signature Area
         currentY += 20;

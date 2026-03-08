@@ -64,7 +64,7 @@ export async function getAllPayments() {
     return await prisma.payment.findMany({
         where: {
             invoice: {
-                userId: session.user.id
+                userId: (session.user as any).adminId || session.user.id
             }
         },
         include: {
@@ -116,7 +116,7 @@ export async function getUpcomingCheques() {
     return await prisma.payment.findMany({
         where: {
             invoice: {
-                userId: session.user.id
+                userId: (session.user as any).adminId || session.user.id
             },
             method: { in: ["CHEQUE", "LCN"] },
             dueDate: {

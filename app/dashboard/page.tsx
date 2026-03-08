@@ -4,7 +4,9 @@ import { RecentInvoices } from "@/components/dashboard/RecentInvoices";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileDown } from "lucide-react";
 
-export default function DashboardPage() {
+import { RestockNeeds } from "@/components/dashboard/RestockNeeds";
+
+export default async function DashboardPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -27,6 +29,10 @@ export default function DashboardPage() {
             </div>
 
             <StatCards />
+
+            <div className="grid gap-8">
+                <RestockNeeds />
+            </div>
 
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
                 <OverviewChart />

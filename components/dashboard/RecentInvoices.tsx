@@ -101,7 +101,12 @@ export function RecentInvoices({ invoices: propInvoices }: RecentInvoicesProps) 
                     <TableBody>
                         {displayInvoices.map((invoice) => (
                             <TableRow key={invoice.id} className="hover:bg-slate-50 cursor-pointer border-slate-50 transition-colors group">
-                                <TableCell className="pl-8 py-5 font-black text-xs text-orange-600 group-hover:underline">{invoice.number || invoice.id}</TableCell>
+                                <TableCell className="pl-8 py-5">
+                                    <span className="font-black text-xs text-orange-600 group-hover:underline block">{invoice.number || invoice.id}</span>
+                                    {invoice.createdByName && (
+                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Par: {invoice.createdByName}</span>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <div className="font-bold text-slate-900 text-sm">{invoice.client?.name || "Client Inconnu"}</div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(invoice.createdAt).toLocaleDateString()}</div>

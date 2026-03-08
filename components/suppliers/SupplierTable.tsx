@@ -28,16 +28,11 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    MoreHorizontal,
     Eye,
-    TrendingUp,
-    CreditCard,
-    ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
-import { EditClientDialog } from "./EditClientDialog";
 
-export function ClientTable({ data }: { data: any[] }) {
+export function SupplierTable({ data }: { data: any[] }) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -46,40 +41,49 @@ export function ClientTable({ data }: { data: any[] }) {
     const columns: ColumnDef<any>[] = [
         {
             accessorKey: "name",
-            header: "Client / Entreprise",
+            header: "Fournisseur",
             cell: ({ row }) => {
-                const client = row.original;
+                const supplier = row.original;
                 return (
-                    <div className="flex flex-col">
-                        <span className="font-black text-slate-900 uppercase text-xs tracking-tight">{client.name}</span>
-                        {client.createdByName && (
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Par: {client.createdByName}</span>
-                        )}
-                    </div>
+                    <span className="font-black text-slate-900 uppercase text-xs tracking-tight">{supplier.name}</span>
                 );
             },
         },
         {
-            id: "tax_ids",
-            header: "ICE / IF",
+            accessorKey: "contactName",
+            header: "Contact",
             cell: ({ row }) => {
-                const client = row.original;
+                const supplier = row.original;
                 return (
                     <span className="text-[10px] font-bold text-slate-500">
-                        {client.ice || "—"}{client.if ? ` / ${client.if}` : ""}
+                        {supplier.contactName || "—"}
                     </span>
                 );
             },
         },
         {
-            accessorKey: "isProspect",
-            header: "Statut",
+            accessorKey: "phone",
+            header: "Téléphone",
             cell: ({ row }) => {
-                const isProspect = row.getValue("isProspect");
-                return isProspect ? (
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-3 h-6 font-black uppercase text-[9px] rounded-full">Piste</Badge>
-                ) : (
-                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-3 h-6 font-black uppercase text-[9px] rounded-full tracking-wider">Partenaire</Badge>
+                const supplier = row.original;
+                return (
+                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        {supplier.phone || "—"}
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: "orders",
+            header: () => <div className="text-center">Commandes</div>,
+            cell: ({ row }) => {
+                const count = row.original.purchaseOrders?.length || 0;
+                return (
+                    <div className="flex justify-center">
+                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-3 h-6 font-black uppercase text-[9px] rounded-full tracking-wider">
+                            {count} BC
+                        </Badge>
+                    </div>
                 );
             },
         },
@@ -87,11 +91,11 @@ export function ClientTable({ data }: { data: any[] }) {
             id: "actions",
             header: () => <div className="text-right">Action</div>,
             cell: ({ row }) => {
-                const client = row.original;
+                const supplier = row.original;
                 return (
                     <div className="flex items-center justify-end">
-                        <Button asChild variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-slate-900 hover:text-white transition-all bg-white border border-slate-200 shadow-sm">
-                            <Link href={`/dashboard/crm/${client.id}`}><Eye className="h-4 w-4" /></Link>
+                        <Button asChild variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-emerald-600 hover:text-white transition-all bg-white border border-slate-200 shadow-sm">
+                            <Link href={`/dashboard/suppliers/${supplier.id}`}><Eye className="h-4 w-4" /></Link>
                         </Button>
                     </div>
                 );
@@ -125,16 +129,16 @@ export function ClientTable({ data }: { data: any[] }) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 px-8 pt-4">
                 <div className="relative w-full max-w-sm group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
                     <Input
-                        placeholder="Rechercher un client (Nom, ICE, Email...)"
+                        placeholder="Rechercher un fournisseur..."
                         value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
                             table.getColumn("name")?.setFilterValue(event.target.value)
                         }
-                        className="h-12 pl-12 rounded-2xl border-slate-200 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500/20 transition-all font-medium"
+                        className="h-12 pl-12 rounded-2xl border-slate-200 bg-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500/20 transition-all font-medium"
                     />
                 </div>
 
@@ -150,7 +154,7 @@ export function ClientTable({ data }: { data: any[] }) {
                     </Button>
                     <div className="flex items-center gap-1">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                            Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                            Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
                         </span>
                     </div>
                     <Button
@@ -165,7 +169,7 @@ export function ClientTable({ data }: { data: any[] }) {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
+            <div className="bg-white">
                 <Table>
                     <TableHeader className="bg-slate-50/50">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -209,7 +213,7 @@ export function ClientTable({ data }: { data: any[] }) {
                                     colSpan={columns.length}
                                     className="h-40 text-center text-slate-400 font-bold uppercase text-xs tracking-widest"
                                 >
-                                    Aucun résultat trouvé.
+                                    Aucun fournisseur trouvé.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -217,13 +221,10 @@ export function ClientTable({ data }: { data: any[] }) {
                 </Table>
             </div>
 
-            <div className="flex items-center justify-between px-4">
+            <div className="flex items-center justify-between px-8 pb-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Total: {data.length} Partenaires répertoriés
+                    Total: {data.length} fournisseurs
                 </p>
-                <div className="flex gap-1">
-                    {/* Could add page size selector here if needed */}
-                </div>
             </div>
         </div>
     );

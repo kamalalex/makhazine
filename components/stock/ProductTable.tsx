@@ -39,6 +39,7 @@ import { deleteProduct } from "@/actions/stock";
 import { exportToExcel } from "@/lib/excel-export";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 interface ProductTableProps {
     products: any[];
@@ -52,6 +53,9 @@ export function ProductTable({ products, warehouses, userPlan }: ProductTablePro
     const [historyOpen, setHistoryOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [transferOpen, setTransferOpen] = useState(false);
+
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === "ADMIN";
 
     const isBasic = userPlan === "BASIC";
 
@@ -79,14 +83,16 @@ export function ProductTable({ products, warehouses, userPlan }: ProductTablePro
                         </Link>
                     )}
                 </div>
-                <Button
-                    variant="outline"
-                    className="rounded-xl border-slate-200 font-bold hover:bg-slate-50 gap-2 h-11"
-                    onClick={() => exportToExcel(products, "Inventaire_Stock")}
-                >
-                    <FileDown className="h-4 w-4" />
-                    Exporter Excel
-                </Button>
+                {isAdmin && (
+                    <Button
+                        variant="outline"
+                        className="rounded-xl border-slate-200 font-bold hover:bg-slate-50 gap-2 h-11"
+                        onClick={() => exportToExcel(products, "Inventaire_Stock")}
+                    >
+                        <FileDown className="h-4 w-4" />
+                        Exporter Excel
+                    </Button>
+                )}
             </div>
 
             <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 border-none overflow-hidden">

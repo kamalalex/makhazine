@@ -39,6 +39,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Votre compte est suspendu. Veuillez contacter l'administrateur.");
                 }
 
+                const company = await (prisma.company as any).findUnique({
+                    where: { userId: user.adminId || user.id },
+                    select: { rolePermissions: true }
+                });
+
                 return {
                     id: user.id,
                     email: user.email,
@@ -46,6 +51,8 @@ export const authOptions: NextAuthOptions = {
                     role: user.role,
                     status: user.status,
                     subscriptionType: user.subscriptionType,
+                    adminId: user.adminId,
+                    rolePermissions: company?.rolePermissions,
                 };
             },
         }),
@@ -57,6 +64,8 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role as string;
                 session.user.status = token.status as string;
                 session.user.subscriptionType = token.subscriptionType as string;
+                (session.user as any).adminId = token.adminId as string | null;
+                (session.user as any).rolePermissions = token.rolePermissions;
             }
             return session;
         },
@@ -66,6 +75,8 @@ export const authOptions: NextAuthOptions = {
                 token.role = (user as any).role;
                 token.status = (user as any).status;
                 token.subscriptionType = (user as any).subscriptionType;
+                token.adminId = (user as any).adminId;
+                token.rolePermissions = (user as any).rolePermissions;
             }
             return token;
         },

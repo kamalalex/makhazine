@@ -49,7 +49,12 @@ export function RecentQuotes({ quotes = [] }: RecentQuotesProps) {
                     <TableBody>
                         {quotes.map((quote) => (
                             <TableRow key={quote.id} className="hover:bg-slate-50 cursor-pointer border-slate-50 transition-colors group">
-                                <TableCell className="pl-8 py-5 font-black text-xs text-orange-600 truncate max-w-[120px]">{quote.number}</TableCell>
+                                <TableCell className="pl-8 py-5">
+                                    <span className="font-black text-xs text-orange-600 truncate max-w-[120px] block">{quote.number}</span>
+                                    {quote.createdByName && (
+                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Par: {quote.createdByName}</span>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <div className="font-bold text-slate-900 text-sm">{quote.client?.name || "Client Inconnu"}</div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(quote.createdAt).toLocaleDateString()}</div>
